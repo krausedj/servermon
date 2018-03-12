@@ -92,4 +92,37 @@ class hpacuclimon(object):
         return self.report
     
     def getMonitorStatus(self):
-        """Nothing to do right now"""
+        if self.report == {}:
+            self.generateReport()
+        
+        failed = False
+
+        for slot in self.report['details']:
+            if 'battery/capacitor status' in self.report['details'][slot] and self.report['details'][slot]['battery/capacitor status'] != 'ok':
+                failed = True
+
+            if 'controller status' in self.report['details'][slot] and self.report['details'][slot]['controller status'] != 'ok':
+                failed = True
+
+            if 'cache status' in self.report['details'][slot] and self.report['details'][slot]['cache status'] != 'ok':
+                failed = True
+        
+        for slot in self.report['pds']:
+            for array in self.report['pds'][slot]:
+                for disk in self.report['pds'][slot][array]:
+                    if 'status' in self.report['pds'][slot][array][disk] and self.report['pds'][slot][array][disk]['status'] != 'ok':
+                        failed = True
+
+        return_data['old'] = self.state['failed']
+        return_data['cur'] = failed
+
+        if self.state['failed'] != failed:
+            self.state['failed'] = True
+            self.__writeState = True
+
+        return return_data
+    
+    def serializeReport(self):
+        if self.report == {}:
+            self.generateReport()
+        return json.dump(self.report, indent=4)
