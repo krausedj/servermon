@@ -9,5 +9,5 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--workingdir', required=True, help='working directory for storing reports and current state')
 args = parser.parse_args()
 
-hpmon = hpacuclimon.hpacuclimon(workingdir=args.workingdir)
+hpmon = hpacuclimon.hpacuclimon(workingDir=args.workingdir)
 hpmon.generateReport(saveToDisk=True)
