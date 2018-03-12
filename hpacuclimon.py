@@ -5,30 +5,33 @@ import subprocess
 class hpacuclimon(object):
     def __init__(self, workingDir: str):
         os.makedirs(workingDir, exist_ok=True)
-        self.fileNameState = workingDir + '/' + self.__name__ + '.state'
+        self.workingDir = workingDir
+        self.fileNameState = workingDir + '/' + self.__class__.__name__ + '.state'
         if os.path.exists(self.fileNameState):
             with open(self.fileNameState, 'r') as file_handle:
                 self.state = json.load(file_handle)
         else:
             self.state = {}
             self.state['failed'] = False
-        self.__writeState__ = False
+        self.__writeState = False
         self.report = {}
 
-    def __del__():
-        if self.__writeState__ != False:
+    def __del__(self):
+        if self.__writeState != False:
             try:
                 with open(self.fileNameState, 'w') as file_handle:
-                    json.dump(self.state, file_handle)
+                    json.dump(self.state, file_handle, indent=4)
             except:
                 """Its okay, the state is not saved, but next time will be assumed not failed"""
 
     def generateReport(self, saveToDisk=False, debugReportFile=''):
-        if debugReportFile != '':
-            self.report['output']['config'] = subprocess.check_output(['hpacucli','ctrl', 'all', 'show', 'config']).split('\n')
-            self.report['output']['detail'] = subprocess.check_output(['hpacucli','ctrl', 'all', 'show', 'detail']).split('\n')
+        if debugReportFile == '':
+            self.report['output'] = {}
+            self.report['output']['config'] = subprocess.check_output(['hpacucli','ctrl', 'all', 'show', 'config']).decode().split('\n')
+            self.report['output']['detail'] = subprocess.check_output(['hpacucli','ctrl', 'all', 'show', 'detail']).decode().split('\n')
             
             """Decode the details, then go get the data"""
+            self.report['details'] = {}
             details = {}
             for line in self.report['output']['detail']:
                 if line.strip() != '':
@@ -48,8 +51,10 @@ class hpacuclimon(object):
                 self.report['details'][details['slot']] = details
 
             """Go get all the drive status"""
+            self.report['pds'] = {}
+            self.report['output']['pd'] = {}
             for slot in self.report['details']:
-                self.report['output']['pd'][slot] = subprocess.check_output(['hpacucli', 'ctrl', 'slot={0}'.format(slot), 'pd', 'all', 'show', 'detail']).split('\n')
+                self.report['output']['pd'][slot] = subprocess.check_output(['hpacucli', 'ctrl', 'slot={0}'.format(slot), 'pd', 'all', 'show', 'detail']).decode().split('\n')
 
                 pds = {}
                 array_name = 'bad_array_name'
@@ -76,13 +81,13 @@ class hpacuclimon(object):
                     self.report['pds'][slot] = pds
 
         else:
-            with open(self.debugReportFile, 'r') as file_handle:
+            with open(debugReportFile, 'r') as file_handle:
                 self.report = json.load(file_handle)
 
         if saveToDisk != False:
-            file_name = workingDir + '/' + self.__name__ + '.report'
+            file_name = self.workingDir + '/' + self.__class__.__name__ + '.report'
             with open(file_name, 'w') as file_handle:
-                json.dump(self.report, file_handle)
+                json.dump(self.report, file_handle, indent=4)
         
         return self.report
     
