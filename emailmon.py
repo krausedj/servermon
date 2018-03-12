@@ -10,6 +10,6 @@ class sendemail(object):
 
         server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
         server.ehlo()
-        server.login(args.user, args.password)
+        server.login(user, password)
         server.sendmail(sent_from, to, email_text)
         server.close()

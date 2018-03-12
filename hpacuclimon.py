@@ -10,6 +10,8 @@ class hpacuclimon(object):
         if os.path.exists(self.fileNameState):
             with open(self.fileNameState, 'r') as file_handle:
                 self.state = json.load(file_handle)
+                if 'failed' not in self.state:
+                    self.state['failed'] = False
         else:
             self.state = {}
             self.state['failed'] = False
@@ -113,11 +115,12 @@ class hpacuclimon(object):
                     if 'status' in self.report['pds'][slot][array][disk] and self.report['pds'][slot][array][disk]['status'] != 'ok':
                         failed = True
 
+        return_data = {}
         return_data['old'] = self.state['failed']
         return_data['cur'] = failed
 
         if self.state['failed'] != failed:
-            self.state['failed'] = True
+            self.state['failed'] = failed
             self.__writeState = True
 
         return return_data
@@ -125,4 +128,4 @@ class hpacuclimon(object):
     def serializeReport(self):
         if self.report == {}:
             self.generateReport()
-        return json.dump(self.report, indent=4)
+        return json.dumps(self.report, indent=4)

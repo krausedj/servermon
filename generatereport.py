@@ -40,4 +40,4 @@ if email_report != False:
     else:
         title = args.idname + ' PASS'
     
-    emailmon.sendemail(user=args.user, password=args.password, email_to=args.email_to, subject=title, body=body )
+    emailmon.sendemail(user=args.user, password=args.password, email_to=args.emailto, subject=title, body=body )
