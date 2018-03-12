@@ -7,15 +7,22 @@ class hpacuclimon(object):
         os.makedirs(workingDir, exist_ok=True)
         self.workingDir = workingDir
         self.fileNameState = workingDir + '/' + self.__class__.__name__ + '.state'
-        if os.path.exists(self.fileNameState):
-            with open(self.fileNameState, 'r') as file_handle:
-                self.state = json.load(file_handle)
-                if 'failed' not in self.state:
-                    self.state['failed'] = False
-        else:
-            self.state = {}
-            self.state['failed'] = False
-        self.__writeState = False
+        self.state = {}
+        self.state['failed'] = False
+        self.__writeState = True
+        try:
+            if os.path.exists(self.fileNameState):
+                with open(self.fileNameState, 'r') as file_handle:
+                    self.state = json.load(file_handle)
+                    if 'failed' not in self.state:
+                        self.state['failed'] = False
+                        self.__writeState = True
+                    else:
+                        """File is validated clean"""
+                        self.__writeState = False
+        except:
+            """Something is wrong with the state file"""
+            self.__writeState = True
         self.report = {}
 
     def __del__(self):
@@ -25,6 +32,7 @@ class hpacuclimon(object):
                     json.dump(self.state, file_handle, indent=4)
             except:
                 """Its okay, the state is not saved, but next time will be assumed not failed"""
+                print('Did not write state')
 
     def generateReport(self, saveToDisk=False, debugReportFile=''):
         if debugReportFile == '':
