@@ -1,15 +1,20 @@
 import json
 import os
 import subprocess
+import fcntl
 
 class hpacuclimon(object):
     def __init__(self, workingDir: str):
         os.makedirs(workingDir, exist_ok=True)
         self.workingDir = workingDir
         self.fileNameState = workingDir + '/' + self.__class__.__name__ + '.state'
+        self.lockFile = None
         self.state = {}
         self.state['failed'] = False
         self.__writeState = True
+        #Try and open the lock file, otherwise fail
+        self.lockFile = open(self.workingDir + '/' + self.__class__.__name__ + '.lock', 'w+')
+        fcntl.flock(self.lockFile, fcntl.LOCK_EX | fcntl.LOCK_NB)
         try:
             if os.path.exists(self.fileNameState):
                 with open(self.fileNameState, 'r') as file_handle:
@@ -33,6 +38,8 @@ class hpacuclimon(object):
             except:
                 """Its okay, the state is not saved, but next time will be assumed not failed"""
                 print('Did not write state')
+        if self.lockFile != None:
+            fcntl.flock(self.lockFile, fcntl.LOCK_UN)
 
     def generateReport(self, saveToDisk=False, debugReportFile=''):
         if debugReportFile == '':
