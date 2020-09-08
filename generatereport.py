@@ -27,9 +27,9 @@ hpmon.generateReport(saveToDisk=True)
 failure = hpmon.getMonitorStatus()
 if failure['cur'] != failure['old']:
     email_report = True
-    if failure['cur'] != False:
-        fail_count += 1
-        title_fail = title_fail + ' RAID'
+if failure['cur'] != False:
+    fail_count += 1
+    title_fail = title_fail + ' RAID'
 
 if failure['cur'] != False or args.emailforce != False:
     body = body + '\n\n' + hpmon.serializeReport()
